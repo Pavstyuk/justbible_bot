@@ -1,0 +1,348 @@
+require('dotenv').config();
+const fs = require('node:fs');
+
+const {
+    Bot,
+    GrammyError,
+    HttpError,
+} = require('grammy');
+
+
+const bot = new Bot(process.env.BOT_API_KEY);
+
+/* BIBLE DATA */
+const titlesArr = ["Бытие,Бт.", "Исход,Ид.", "Левит,Лв.", "Числа,Чс.", "Второзаконие,Вт.", "Иисус Навин,Нв.", "Судьи,Сд.", "Руфь,Рф,", "1 Царств, 1Царств,1Цар,1Ц.", "2 Царств,2Царств,2Цар,2Ц.", "3 Царств,3Царств,3Цар,3Ц.", "4 Царств,4Царств,4Цар,4Ц.", "1 Паралипоменон,1Пар,1П.,1 Летопись,1Лет", "2 Паралипоменон,2Пар,2П.,2 Летопись,2Лет", "Ездра,Езд.,Ез.", "Неемия,Нм.", "Есфирь,Эсфирь,Ес.,Эс.", "Иов,Ив.", "Псалтирь,Псалтырь,Псалом,Псалмы,Пс.", "Притчи,Пр.", "Екклесиаст,Екклезиаст,Ек.", "Песня Песней,Песн.,Пн.", "Исаия,Исайя,Исаи,Ис.", "Иеремия,Иеремии,Ир.", "Плач Иеремии,Пл.", "Иезекииль,Иезекииля,Из.", "Даниил,Даниила,Дн.", "Осия,Осии,Ос.", "Иоиль,Иоиля,Ил.", "Амос,Амоса,Ам.", "Авдий,Авдия,Аи.", "Иона,Ионы,Ио.", "Михей,Михея,Мх.", "Наум,Наума,На.", "Аввакум,Аввакума,Ав.", "Софония,Софонии,Сф.", "Аггей,Аггея,Аг.", "Захария,Захарии,Зр.", "Малахия,Малахии,Мл.", "Матфей,Матфея,Матвей,Мт.,Мф.", "Марк,Марка,Мк.,Мр.", "Лука,Луки,Лк.", "Иоанн,Иоанна,Ин.", "Деяния,Де.", "Иаков,Иакова,Ик.", "1 Петра,1Петра,1П.", "2 Петра,2Петра,2П", "1 Иоанна,1Иоанна,1 Ин,1Ин.,1-е Иоан,1И.", "2 Иоанна,2Иоанна,2 Ин,2Ин.,2-е Иоан,2И.", "3 Иоанна,3Иоанна,3 Ин,3Ин.,3-е Иоан,3И.", "Иуда,Иуды,Иу.", "Римлянам,Рим.,Рм.", "1 Коринфянам,1Коринфянам,1Кор.,1К.,1-е Коринфянам", "2 Коринфянам,2Коринфянам,2Кор.,2К.,2-е Коринфянам", "Галатам,Гл.", "Ефесянам,Эфесянам,Еф.,Эф.", "Филиппийцам,Флп,Фл.", "Колоссянам,Кл.", "1 Фессалоникийцам,1Фессалоникийцам,1-е Фес,1-е Фес.,1Ф.", "2 Фессалоникийцам,2Фессалоникийцам,2-е Фес,2-е Фес.,2Ф.", "1 Тимофею,1Тимофею,1-е Тим.,1Тим.,1Т.", "2 Тимофею,2Тимофею,2-е Тим.,2Тим.,2Т.", "Титу,Тит.,Ти.", "Филимону,Флм.,Фм.", "Евреям,Евр.,Ер.", "Откровение,Откр.,Ои.,Апок."];
+const books = ["Бытие", "Исход", "Левит", "Числа", "Второзаконие", "Иисус Навин", "Судьи", "Руфь", "1 Царств", "2 ", "3 Царств", "4 Царств", "1 Паралипоменон", "2 Паралипоменон", "Ездра", "Неемия", "Есфирь", "Иов", "Псалтирь", "Притчи", "Екклесиаст", "Песня Песней", "Исаия", "Иеремия", "Плач Иеремии", "Иезекииль", "Даниил", "Осия", "Иоиль", "Амос", "Авдий", "Иона", "Михей", "Наум", "Аввакум", "Софония", "Аггей", "Захария", "Малахия", "Матфей", "Марк", "Лука", "Иоанн", "Деяния", "Иаков", "1 Петра", "2 Петра", "1 Иоанна", "2 Иоанна", "3 Иоанна", "Иуда", "Римлянам", "1 Коринфянам", "2 Коринфянам", "Галатам", "Ефесянам", "Филиппийцам", "Колоссянам", "1 Фессалоникийцам", "2 Фессалоникийцам", "1 Тимофею", "2 Тимофею", "Титу", "Филимону", "Евреям", "Откровение"];
+const chaptersArr = [50, 40, 27, 36, 34, 24, 21, 4, 31, 24, 22, 25, 29, 36, 10, 13, 10, 42, 150, 31, 12, 8, 66, 52, 5, 48, 12, 14, 3, 9, 1, 4, 7, 3, 3, 3, 2, 14, 4, 28, 16, 24, 21, 28, 5, 5, 3, 5, 1, 1, 1, 16, 16, 13, 6, 6, 4, 4, 5, 3, 6, 4, 3, 1, 13, 22];
+let theBibleRBO;
+let theBibleRST;
+
+const showErrorVerse = async (verse) => {
+    await ctx.reply(`<b>${verse}</b> - неверные координаты`, {
+        parse_mode: "HTML"
+    });
+}
+
+const writeLogFile = (msg, cmd) => {
+    let d = new Date();
+    let now = new Intl.DateTimeFormat('ru-RU', {
+        dateStyle: "short",
+        timeStyle: "short"
+    }).format(d);
+    let content = `date: "${now}", message: "${msg.text}", event: "${cmd}"; \r\n`;
+    console.log(content);
+
+    fs.appendFile("./bot.log", content, err => {
+        if (err) {
+            console.log(err);
+        } else {
+            console.log("Log записан.");
+        }
+    })
+}
+
+// Открываем текст Библии из JSON файла Современный перевод
+fetch("https://justbible.ru/json/rbo.json")
+    .then((response) => {
+        return response.json();
+    })
+    .then((rbo) => {
+        theBibleRBO = rbo;
+    });
+
+// Функция получения случайного отрывка
+
+const getRandomVerse = () => {
+    const getRandomNumber = (min, max) => {
+        return (Math.random() * (max - min) + min).toFixed(0);
+    }
+    let rnd = getRandomNumber(0, theBibleRBO.length);
+    console.log(rnd);
+    if (theBibleRBO[rnd].text != "") {
+        let randomVerse = `${theBibleRBO[rnd].text} \r\n\r\n(${theBibleRBO[rnd].book} ${theBibleRBO[rnd].chapter}:${theBibleRBO[rnd].verse})`;
+        let linkToVerse = `https://justbible.ru/?trans=rbo&book=${theBibleRBO[rnd].book}&chapter=${theBibleRBO[rnd].chapter}&verse=${theBibleRBO[rnd].verse}`;
+
+        return `<blockquote><i>${randomVerse}</i></blockquote> <a href="${linkToVerse}">Читать в контексте...</a>`;
+
+    } else {
+        getRandomVerse();
+    }
+}
+
+bot.command('start', async (ctx) => {
+    await ctx.react("😍")
+    await ctx.reply("<b>Привет, я электронный помощник Просто Библия</b> \r\n\r\nЯ начинающий бот, подающий большие надежды. Умею две функции: \n\r\r\n1. Показывать случайные отрывки из Библии, команда: /random \r\n\r\n2. Показывать отрывок из Библии по заданным координатам: /read", {
+        parse_mode: "HTML"
+    });
+});
+
+// КОМАНДЫ БОТА
+
+bot.command('random', async (ctx) => {
+    await ctx.react("🤩");
+    await ctx.reply(getRandomVerse(), {
+        parse_mode: "HTML",
+        disable_web_page_preview: true
+    });
+    writeLogFile(ctx.message, "random");
+});
+
+bot.command('help', async (ctx) => {
+    await ctx.react("🤓");
+    await ctx.reply('<b>Телеграм бот Просто Библия использует Современный Русский Перевод, РБО, 2015.</b> \r\n\r\n  Напишите в сообщении координаты отрывка из Библии в формате Иоанн 1:1 и бот выдаст указанный стих: Евангелие от Иоанна, глава 1, стих 1. Для разделения главы и стиха допускается символ двоеточие или точка. \r\n\r\n  Чтобы вывести отрывок из нескольких стихов можно указать координаты в виде: 1 Кор 13:4-8. \r\n\r\n  Можно указать конкретные стихи через запятую: Иоанн 1:1,14. \r\n\r\n  Допускается сокращение названия книги до нескольких букв, вместо <i>1 Коринфянам</i> можно написать <i>1 Кор</i> или <i>1Кор</i> или даже <i>1К</i>, а вместо <i>Откровение</i> - <i>Откр</i> или <i>Отк</i> \r\n\r\n  Полный функционал приложения Просто Библия можно найти по адресу <a href="https://justbible.ru">justbible.ru</a>\r\n\r\nРазработчик @pavstyuk', {
+        parse_mode: "HTML",
+        disable_web_page_preview: true
+    });
+});
+
+bot.command('read', async (ctx) => {
+    await ctx.react("👍");
+    await ctx.reply('Отправьте координаты отрывка, например: Откр 1:3 или Быт 1:1-5', {
+        parse_mode: "HTML",
+        disable_web_page_preview: true
+    });
+});
+
+// МЕНЮ БОТА
+
+bot.api.setMyCommands([{
+        command: "start",
+        description: "Запускаем электронного помощника"
+    },
+    {
+        command: "read",
+        description: "Стандартное состояние бота. Впишите координаты - получите отрывок"
+    },
+    {
+        command: "random",
+        description: "Бот показывает случайный отрывок из Библии"
+    },
+    {
+        command: "help",
+        description: "Чуть подробнее о боте и как им пользоваться"
+    }
+])
+
+bot.on("message:text", async (ctx) => {
+
+    console.log(ctx.from);
+    writeLogFile(ctx.message, "read");
+
+    let messageArr = ctx.message.text.split(' ');
+    let book;
+    let chapter;
+    let ver;
+    let text;
+
+    const showErrorVerse = async (verse) => {
+        await ctx.reply(`<b>${verse}</b> - неверные координаты`, {
+            parse_mode: "HTML"
+        });
+    }
+
+    const getChapter = (book, coords) => {
+        let coordChapter;
+        let coordVerse;
+        if (coords.includes(':')) {
+            coordChapter = Number(coords.split(':')[0]);
+            coordVerse = coords.split(':')[1];
+        } else if (coords.includes('.')) {
+            coordChapter = Number(coords.split('.')[0]);
+            coordVerse = coords.split('.')[1];
+        } else {
+            coordChapter = Number(coords);
+            coordVerse = 0;
+        }
+        console.log(`coords: ${coords}`)
+
+        let bookIndex = books.indexOf(book);
+        if (coordChapter > 0 && coordChapter <= chaptersArr[bookIndex]) {
+            ver = coordVerse;
+            return Number(coordChapter);
+        } else {
+            ver = false;
+            return false;
+        }
+    }
+
+    const checkVers = (vers) => {
+        console.log(`checking vers: ${vers}`);
+        if (vers.length > 1) {
+            if (vers.includes("-")) {
+                let versArr = vers.split("-");
+                let delta = Number(versArr[1]) - Number(versArr[0]);
+                if (delta > 0) {
+                    let versDelta = []
+                    for (let i = 0; i <= delta; i++) {
+                        versDelta.push(Number(versArr[0]) + i);
+                    }
+                    console.log(`versDelta: ${versDelta}`);
+                    return versDelta;
+                } else {
+                    return false;
+                }
+
+            } else if (vers.includes(",")) {
+                let versArr = vers.split(",");
+                versArr.sort((a, b) => {
+                    return +a - +b;
+                });
+                return versArr.map(Number);
+            } else {
+                return Number(vers);
+            }
+        } else {
+            return Number(vers);
+        }
+    }
+
+    const checkBook = () => {
+        if (messageArr[0].match(/^[0-9]+$/) != null) {
+            if (messageArr[0].length === 1) {
+
+                let queryBook = `${messageArr[0]} ${messageArr[1]}`;
+
+                let foundBook = titlesArr.find((title) => {
+                    return title.toLowerCase().includes(queryBook.toLowerCase());
+                });
+
+                console.log(foundBook)
+
+                book = books[titlesArr.indexOf(foundBook)];
+
+                if (book && messageArr[2]) {
+                    chapter = getChapter(book, messageArr[2]);
+                } else {
+                    chapter = false;
+                }
+
+            } else {
+                book = false;
+            }
+
+        } else {
+            let queryBook = messageArr[0];
+            let foundBook = titlesArr.find((title) => {
+                return title.toLowerCase().includes(queryBook.toLowerCase());
+            });
+            console.log(foundBook)
+            book = books[titlesArr.indexOf(foundBook)];
+
+            if (book && messageArr[1]) {
+                chapter = getChapter(book, messageArr[1]);
+            } else {
+                chapter = false;
+            }
+        }
+
+        if (book && chapter) {
+            text = "";
+            if (ver === 0) {
+                theBibleRBO.forEach(item => {
+                    if (item.book == book && Number(item.chapter) === chapter) {
+                        text += `${item.verse}. ${item.text} \r\n`;
+                    }
+                });
+                text += `\r\n(${book} ${chapter})`;
+            } else {
+
+                ver = checkVers(ver);
+                if (typeof ver === "number") {
+                    console.log(`Книга: ${book}, Глава: ${chapter}, Стих: ${ver}`);
+                    theBibleRBO.forEach(item => {
+                        if (item.book == book && Number(item.chapter) === chapter && Number(item.verse) === ver) {
+                            if (item.text != "") {
+                                text = `${item.text}\r\n\r\n(${item.book} ${item.chapter}:${item.verse})`;
+                            } else {
+                                text = `<code>В современном переводе стих <b>${item.book} ${item.chapter}:${item.verse}</b> имеет другие координаты.</code>`;
+                            }
+                        }
+                    });
+                } else if (typeof ver === "object") {
+
+                    console.log(`Книга: ${book}, Глава: ${chapter}, Стих: ${ver}`);
+                    console.log(ver);
+                    text = "";
+                    theBibleRBO.forEach(item => {
+                        if (item.book == book && Number(item.chapter) === chapter && ver.includes(Number(item.verse))) {
+                            if (item.text != "") {
+                                text += `${item.verse}. ${item.text}\r\n`;
+                            } else {
+                                text += `${item.verse}. --\r\n`;
+                            }
+                        }
+                    });
+
+                    if (ver[ver.length - 1] - ver[0] === ver.length - 1) {
+                        text += `\r\n(${book} ${chapter}:${ver[0]}-${ver[ver.length - 1]})`;
+                    } else {
+                        text += `\r\n(${book} ${chapter}:${ver})`;
+                    }
+
+                } else {
+                    text = false;
+                }
+                console.log(`Текст: ${text}`);
+            }
+        }
+    }
+
+    checkBook();
+
+    if (book && chapter && text) {
+
+        if (text.includes("<code>")) {
+            await ctx.react("🤔");
+            await ctx.reply(`${text}`, {
+                parse_mode: "HTML"
+            });
+            return;
+        }
+
+        if (text.length < 4096) {
+            await ctx.react("👍");
+            await ctx.reply(`<blockquote><em>${text}</em></blockquote>`, {
+                parse_mode: "HTML"
+            });
+        } else {
+            await ctx.react("👀");
+            await ctx.reply(`Слишком длинная глава <b>${book}: ${chapter}</b>. \r\nУточните  запрос.`, {
+                parse_mode: "HTML"
+            });
+        }
+    } else if (book && chapter) {
+        await ctx.react("👀");
+        await ctx.reply(`Не могу найти стих в главе ${chapter} из книги ${book}`);
+    } else if (book) {
+        await ctx.react("👀");
+        await ctx.reply(`Не могу найти главу в книге ${book}`);
+    } else {
+        await ctx.react("👀");
+        showErrorVerse(ctx.message.text);
+    }
+
+});
+
+bot.on(["message:media", "message:file"], async (ctx) => {
+    await ctx.reply(`Мне кажется, я вас не понимаю... /start`, {
+        parse_mode: "HTML"
+    });
+});
+
+
+// ОБРАБОТЧИК ОШИБОК 
+bot.catch((err) => {
+    const ctx = err.ctx;
+    console.error(`Ошибка при обработке обновления ${ctx.update.update_id}:`);
+    const e = err.error;
+    if (e instanceof GrammyError) {
+        console.error("Ошибка в запросе:", e.description);
+    } else if (e instanceof HttpError) {
+        console.error("Не удалось связаться с Telegram:", e);
+    } else {
+        console.error("Неизвестная ошибка:", e);
+    }
+});
+
+
+bot.start();
