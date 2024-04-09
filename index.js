@@ -28,7 +28,7 @@ const writeLogFile = (ctx, cmd) => {
         dateStyle: "short",
         timeStyle: "short"
     }).format(d);
-    let content = `date: "${now}", userID: ${ctx.from.id}, user: "${ctx.from.username}", name: "${ctx.from.first_name} ${ctx.from.last_name}", message: "${ctx.message.text}", event: "${cmd}"; \r\n`;
+    let content = `date: "${now}", message: "${ctx.message.text}", event: "${cmd}"; \r\n`;
     console.log(content);
 
     fs.appendFile("./bot.log", content, err => {
