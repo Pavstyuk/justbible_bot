@@ -1,5 +1,5 @@
 // Just Bible Bot 
-// Version 1.2
+// Version 1.2.1
 
 require('dotenv').config();
 const fs = require('node:fs');
@@ -41,6 +41,7 @@ const writeLogFile = (ctx, cmd) => {
 }
 
 // Открываем текст Библии из JSON файла Современный перевод
+
 fetch("https://justbible.ru/json/rbo.json")
     .then((response) => {
         return response.json();
