@@ -1,3 +1,6 @@
+// Just Bible Bot 
+// Version 1.2
+
 require('dotenv').config();
 const fs = require('node:fs');
 
@@ -97,17 +100,17 @@ bot.command('help', async (ctx) => {
 // МЕНЮ БОТА
 
 bot.api.setMyCommands([{
-        command: "start",
-        description: "Запускаем электронного помощника"
-    },
-    {
-        command: "random",
-        description: "Бот показывает случайный отрывок из Библии"
-    },
-    {
-        command: "help",
-        description: "Как пользоваться ботом?"
-    }
+    command: "start",
+    description: "Запускаем электронного помощника"
+},
+{
+    command: "random",
+    description: "Бот показывает случайный отрывок из Библии"
+},
+{
+    command: "help",
+    description: "Как пользоваться ботом?"
+}
 ]);
 
 bot.hears([/Искать/, /искать/, /Поиск/, /поиск/, /Найти/, /найти/], async (ctx) => {
